@@ -44,12 +44,20 @@ export default async function DashboardPage() {
         <section>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-zinc-900">All Available Tests</h2>
-            <Link
-              href="/dashboard/create-test"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-700"
-            >
-              + Create Test
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href="/api/template/upload"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-violet-300 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-800 transition hover:bg-violet-100"
+              >
+                Download Upload Template
+              </a>
+              <Link
+                href="/dashboard/create-test"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-700"
+              >
+                + Create Test
+              </Link>
+            </div>
           </div>
 
           {tests.length === 0 ? (
