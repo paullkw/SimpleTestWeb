@@ -26,9 +26,10 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export default function TestForm({ testId, title, questions }: Props) {
-  const [answers, setAnswers] = useState<number[][]>(() => questions.map(() => []));
+  const [shuffledQuestions] = useState(() => shuffleArray(questions));
+  const [answers, setAnswers] = useState<number[][]>(() => shuffledQuestions.map(() => []));
   const [shuffledOrders] = useState<number[][]>(() =>
-    questions.map((q) => shuffleArray(q.options.map((_, i) => i)))
+    shuffledQuestions.map((q) => shuffleArray(q.options.map((_, i) => i)))
   );
   const [checkedQuestions, setCheckedQuestions] = useState<Set<number>>(() => new Set());
 
@@ -36,13 +37,13 @@ export default function TestForm({ testId, title, questions }: Props) {
     await fetch(`/api/tests/${testId}/incorrect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ questionId: questions[questionIndex].questionId }),
+      body: JSON.stringify({ questionId: shuffledQuestions[questionIndex].questionId }),
     });
   }
 
   function checkQuestion(questionIndex: number) {
     const selected = [...answers[questionIndex]].sort((a, b) => a - b);
-    const correct = [...questions[questionIndex].correctIndexes].sort((a, b) => a - b);
+    const correct = [...shuffledQuestions[questionIndex].correctIndexes].sort((a, b) => a - b);
     const isMatch =
       selected.length === correct.length &&
       selected.every((v, i) => v === correct[i]);
@@ -71,7 +72,7 @@ export default function TestForm({ testId, title, questions }: Props) {
   }
 
   function selectAnswer(questionIndex: number, optionIndex: number) {
-    const isCorrect = questions[questionIndex].correctIndexes.includes(optionIndex);
+    const isCorrect = shuffledQuestions[questionIndex].correctIndexes.includes(optionIndex);
     if (!isCorrect) {
       recordIncorrect(questionIndex);
     }
@@ -82,7 +83,7 @@ export default function TestForm({ testId, title, questions }: Props) {
     );
   }
 
-  if (questions.length === 0) {
+  if (shuffledQuestions.length === 0) {
     return (
       <section className="space-y-4">
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -101,7 +102,7 @@ export default function TestForm({ testId, title, questions }: Props) {
   return (
     <form className="space-y-6">
       <ul className="space-y-5">
-        {questions.map((question, questionIndex) => (
+        {shuffledQuestions.map((question, questionIndex) => (
           <li key={`${title}-${questionIndex}`} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 shadow-sm">
             <div className="mb-3 flex items-start justify-between gap-2">
               <p className="text-sm font-semibold text-zinc-900">
