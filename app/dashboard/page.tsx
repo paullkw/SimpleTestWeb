@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { getSessionFromCookies } from "@/lib/auth";
@@ -8,7 +9,6 @@ type TestDocument = {
   _id: ObjectId;
   title: string;
   description?: string;
-  durationMinutes?: number;
   questionsCount?: number;
 };
 
@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   const testsCollection = db.collection<TestDocument>("tests");
 
   const tests = await testsCollection
-    .find({}, { projection: { title: 1, description: 1, durationMinutes: 1, questionsCount: 1 } })
+    .find({}, { projection: { title: 1, description: 1, questionsCount: 1 } })
     .sort({ title: 1 })
     .toArray();
 
@@ -41,7 +41,15 @@ export default async function DashboardPage() {
         </header>
 
         <section>
-          <h2 className="mb-4 text-xl font-semibold text-zinc-900">All Available Tests</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-zinc-900">All Available Tests</h2>
+            <Link
+              href="/dashboard/create-test"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-700"
+            >
+              + Create Test
+            </Link>
+          </div>
 
           {tests.length === 0 ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -59,12 +67,17 @@ export default async function DashboardPage() {
                     {test.description?.trim() || "No description provided."}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-700">
-                    <span className="rounded-full bg-orange-100 px-2.5 py-1">
-                      Duration: {test.durationMinutes ?? "N/A"} mins
-                    </span>
                     <span className="rounded-full bg-emerald-100 px-2.5 py-1">
                       Questions: {test.questionsCount ?? "N/A"}
                     </span>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <Link
+                      href={`/dashboard/edit-test/${test._id.toString()}`}
+                      className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100"
+                    >
+                      Edit
+                    </Link>
                   </div>
                 </li>
               ))}
