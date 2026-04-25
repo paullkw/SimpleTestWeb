@@ -29,8 +29,14 @@ function formatCloneTitle(title: string) {
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");
   const seconds = String(now.getSeconds()).padStart(2, "0");
+  const datetime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
-  return `${title} ${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  const datetimePattern = / \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+  if (datetimePattern.test(title)) {
+    return title.replace(datetimePattern, ` ${datetime}`);
+  }
+
+  return `${title} ${datetime}`;
 }
 
 export default async function CloneTestPage({ params }: { params: Promise<{ id: string }> }) {
