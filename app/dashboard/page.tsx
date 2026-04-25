@@ -9,7 +9,7 @@ type TestDocument = {
   _id: ObjectId;
   title: string;
   description?: string;
-  questionsCount?: number;
+  questionIds?: ObjectId[];
 };
 
 export default async function DashboardPage() {
@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   const testsCollection = db.collection<TestDocument>("tests");
 
   const tests = await testsCollection
-    .find({}, { projection: { title: 1, description: 1, questionsCount: 1 } })
+    .find({}, { projection: { title: 1, description: 1, questionIds: 1 } })
     .sort({ title: 1 })
     .toArray();
 
@@ -68,7 +68,7 @@ export default async function DashboardPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-700">
                     <span className="rounded-full bg-emerald-100 px-2.5 py-1">
-                      Questions: {test.questionsCount ?? "N/A"}
+                      Questions: {test.questionIds?.length ?? 0}
                     </span>
                   </div>
                   <div className="mt-4 flex items-center justify-end gap-2">

@@ -120,7 +120,6 @@ export default function EditTestForm({
         body: JSON.stringify({
           title,
           description,
-          questionsCount: questions.length,
           questions: questions.map(({ text, options, correctIndexes }) => ({
             text,
             options,

@@ -4,18 +4,20 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import TestForm from "./test-form";
 
-type Question = {
+type QuestionDocument = {
+  _id: ObjectId;
   text: string;
   options: string[];
-  correctIndex?: number;
-  correctIndexes?: number[];
+  correctIndexes: number[];
+  incorrectCount?: number;
+  order: number;
 };
 
 type TestDocument = {
   _id: ObjectId;
   title: string;
   description?: string;
-  questions?: Question[];
+  questionIds?: ObjectId[];
 };
 
 export default async function TestPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,29 +40,37 @@ export default async function TestPage({ params }: { params: Promise<{ id: strin
     notFound();
   }
 
-  const questions = test.questions ?? [];
+  const questionIds = test.questionIds ?? [];
+  let questions: QuestionDocument[] = [];
+
+  if (questionIds.length > 0) {
+    questions = await db
+      .collection<QuestionDocument>("questions")
+      .find({ _id: { $in: questionIds } })
+      .toArray();
+    // Sort by original order
+    questions.sort((a, b) => a.order - b.order);
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_15%_0%,#86efac_0%,transparent_30%),linear-gradient(160deg,#f0fdf4_0%,#ecfeff_55%,#ffffff_100%)] px-4 py-10 text-zinc-900">
       <div className="mx-auto w-full max-w-3xl rounded-2xl border border-emerald-200/80 bg-white/85 p-6 shadow-[0_26px_90px_rgba(5,150,105,0.12)] backdrop-blur-sm sm:p-8">
         <header className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">{test.title}</h1>
-          <p className="mt-1 text-sm text-emerald-900/80">
-            {test.description?.trim() || "Answer all questions and submit your test."}
-          </p>
+          {test.description?.trim() ? (
+            <p className="mt-1 text-sm text-emerald-900/80">{test.description.trim()}</p>
+          ) : null}
         </header>
 
         <TestForm
+          testId={id}
           title={test.title}
-          questions={questions.map((question) => ({
-            text: question.text,
-            options: question.options,
-            correctIndexes:
-              question.correctIndexes && question.correctIndexes.length > 0
-                ? question.correctIndexes
-                : typeof question.correctIndex === "number"
-                  ? [question.correctIndex]
-                  : [0],
+          questions={questions.map((q) => ({
+            questionId: q._id.toString(),
+            text: q.text,
+            options: q.options,
+            incorrectCount: q.incorrectCount ?? 0,
+            correctIndexes: q.correctIndexes,
           }))}
         />
       </div>

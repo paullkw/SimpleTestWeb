@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 
 type QuestionInput = {
   text?: string;
   options?: string[];
-  correctIndex?: number;
   correctIndexes?: number[];
 };
 
 type CreateTestBody = {
   title?: string;
   description?: string;
-  questionsCount?: number;
   questions?: QuestionInput[];
 };
 
@@ -32,16 +31,35 @@ export async function POST(request: Request) {
     }
 
     const db = await getDb();
-    const result = await db.collection("tests").insertOne({
+    const testId = new ObjectId();
+
+    const questionsInput = body.questions ?? [];
+    let questionIds: ObjectId[] = [];
+
+    if (questionsInput.length > 0) {
+      const questionDocs = questionsInput.map((q, order) => ({
+        testId,
+        text: q.text ?? "",
+        options: q.options ?? [],
+        correctIndexes: q.correctIndexes ?? [],
+        incorrectCount: 0,
+        order,
+      }));
+
+      const insertResult = await db.collection("questions").insertMany(questionDocs);
+      questionIds = Object.values(insertResult.insertedIds) as ObjectId[];
+    }
+
+    await db.collection("tests").insertOne({
+      _id: testId,
       title,
       description: body.description?.trim() ?? "",
-      questionsCount: body.questionsCount ?? 0,
-      questions: body.questions ?? [],
+      questionIds,
       createdBy: session.userId,
       createdAt: new Date(),
     });
 
-    return NextResponse.json({ testId: result.insertedId.toString() }, { status: 201 });
+    return NextResponse.json({ testId: testId.toString() }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to create test." }, { status: 500 });
   }

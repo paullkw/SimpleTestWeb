@@ -6,14 +6,12 @@ import { getDb } from "@/lib/mongodb";
 type QuestionInput = {
   text?: string;
   options?: string[];
-  correctIndex?: number;
   correctIndexes?: number[];
 };
 
 type UpdateTestBody = {
   title?: string;
   description?: string;
-  questionsCount?: number;
   questions?: QuestionInput[];
 };
 
@@ -41,17 +39,40 @@ export async function PUT(
     }
 
     const db = await getDb();
+    const testObjectId = new ObjectId(id);
+
+    // Replace all questions for this test
+    await db.collection("questions").deleteMany({ testId: testObjectId });
+
+    const questionsInput = body.questions ?? [];
+    let questionIds: ObjectId[] = [];
+
+    if (questionsInput.length > 0) {
+      const questionDocs = questionsInput.map((q, order) => ({
+        testId: testObjectId,
+        text: q.text ?? "",
+        options: q.options ?? [],
+        correctIndexes: q.correctIndexes ?? [],
+        incorrectCount: 0,
+        order,
+      }));
+
+      const insertResult = await db.collection("questions").insertMany(questionDocs);
+      questionIds = Object.values(insertResult.insertedIds) as ObjectId[];
+    }
+
     const result = await db.collection("tests").updateOne(
-      { _id: new ObjectId(id) },
+      { _id: testObjectId },
       {
         $set: {
           title,
           description: body.description?.trim() ?? "",
-          questionsCount: body.questionsCount ?? 0,
-          questions: body.questions ?? [],
+          questionIds,
           updatedAt: new Date(),
         },
         $unset: {
+          questions: "",
+          questionsCount: "",
           durationMinutes: "",
         },
       }

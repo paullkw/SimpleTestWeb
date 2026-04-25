@@ -4,18 +4,19 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import EditTestForm from "./edit-test-form";
 
-type Question = {
+type QuestionDocument = {
+  _id: ObjectId;
   text: string;
   options: string[];
-  correctIndex?: number;
-  correctIndexes?: number[];
+  correctIndexes: number[];
+  order: number;
 };
 
 type TestDocument = {
   _id: ObjectId;
   title: string;
   description?: string;
-  questions?: Question[];
+  questionIds?: ObjectId[];
 };
 
 export default async function EditTestPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,6 +32,17 @@ export default async function EditTestPage({ params }: { params: Promise<{ id: s
 
   if (!test) notFound();
 
+  const questionIds = test.questionIds ?? [];
+  let questionDocs: QuestionDocument[] = [];
+
+  if (questionIds.length > 0) {
+    questionDocs = await db
+      .collection<QuestionDocument>("questions")
+      .find({ _id: { $in: questionIds } })
+      .toArray();
+    questionDocs.sort((a, b) => a.order - b.order);
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_15%_0%,#fdba74_0%,transparent_35%),linear-gradient(160deg,#fff7ed_0%,#fffbeb_55%,#ffffff_100%)] px-4 py-10 text-zinc-900">
       <div className="mx-auto w-full max-w-2xl rounded-2xl border border-orange-200/80 bg-white/85 p-6 shadow-[0_26px_90px_rgba(120,53,15,0.14)] backdrop-blur-sm sm:p-8">
@@ -43,19 +55,12 @@ export default async function EditTestPage({ params }: { params: Promise<{ id: s
           testId={id}
           initialTitle={test.title}
           initialDescription={test.description ?? ""}
-          initialQuestions={
-            test.questions?.map((q, i) => ({
-              id: i,
-              text: q.text,
-              options: q.options,
-              correctIndexes:
-                q.correctIndexes && q.correctIndexes.length > 0
-                  ? q.correctIndexes
-                  : typeof q.correctIndex === "number"
-                    ? [q.correctIndex]
-                    : [0],
-            })) ?? []
-          }
+          initialQuestions={questionDocs.map((q, i) => ({
+            id: i,
+            text: q.text,
+            options: q.options,
+            correctIndexes: q.correctIndexes,
+          }))}
         />
       </div>
     </main>

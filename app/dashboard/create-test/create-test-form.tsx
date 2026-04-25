@@ -108,7 +108,6 @@ export default function CreateTestForm() {
         body: JSON.stringify({
           title,
           description,
-          questionsCount: questions.length,
           questions: questions.map(({ text, options, correctIndexes }) => ({
             text,
             options,
