@@ -85,6 +85,12 @@ export default async function DashboardPage() {
                     >
                       Edit
                     </Link>
+                    <Link
+                      href={`/dashboard/report/${test._id.toString()}`}
+                      className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100"
+                    >
+                      Report
+                    </Link>
                     <DeleteTestButton testId={test._id.toString()} />
                   </div>
                 </li>
