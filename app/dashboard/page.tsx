@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { getSessionFromCookies } from "@/lib/auth";
 import LogoutButton from "./logout-button";
+import DeleteTestButton from "./delete-test-button";
 
 type TestDocument = {
   _id: ObjectId;
@@ -84,6 +85,7 @@ export default async function DashboardPage() {
                     >
                       Edit
                     </Link>
+                    <DeleteTestButton testId={test._id.toString()} />
                   </div>
                 </li>
               ))}

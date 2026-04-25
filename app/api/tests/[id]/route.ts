@@ -87,3 +87,35 @@ export async function PUT(
     return NextResponse.json({ error: "Failed to update test." }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  ctx: RouteContext<"/api/tests/[id]">
+) {
+  const session = await getSessionFromCookies();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const { id } = await ctx.params;
+
+  if (!ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Invalid test ID." }, { status: 400 });
+  }
+
+  try {
+    const db = await getDb();
+    const testObjectId = new ObjectId(id);
+
+    await db.collection("questions").deleteMany({ testId: testObjectId });
+    const result = await db.collection("tests").deleteOne({ _id: testObjectId });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Test not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete test." }, { status: 500 });
+  }
+}

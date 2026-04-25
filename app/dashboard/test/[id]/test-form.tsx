@@ -8,7 +8,6 @@ type Question = {
   text: string;
   options: string[];
   correctIndexes: number[];
-  incorrectCount: number;
 };
 
 type Props = {
@@ -32,12 +31,8 @@ export default function TestForm({ testId, title, questions }: Props) {
     questions.map((q) => shuffleArray(q.options.map((_, i) => i)))
   );
   const [checkedQuestions, setCheckedQuestions] = useState<Set<number>>(() => new Set());
-  const [incorrectCounts, setIncorrectCounts] = useState<number[]>(() =>
-    questions.map((q) => q.incorrectCount)
-  );
 
   async function recordIncorrect(questionIndex: number) {
-    setIncorrectCounts((prev) => prev.map((c, i) => (i === questionIndex ? c + 1 : c)));
     await fetch(`/api/tests/${testId}/incorrect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

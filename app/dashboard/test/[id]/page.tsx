@@ -69,7 +69,6 @@ export default async function TestPage({ params }: { params: Promise<{ id: strin
             questionId: q._id.toString(),
             text: q.text,
             options: q.options,
-            incorrectCount: q.incorrectCount ?? 0,
             correctIndexes: q.correctIndexes,
           }))}
         />
