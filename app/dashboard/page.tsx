@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { getSessionFromCookies } from "@/lib/auth";
 import LogoutButton from "./logout-button";
 import DeleteTestButton from "./delete-test-button";
+import UploadTestButton from "./upload-test-button";
 
 type TestDocument = {
   _id: ObjectId;
@@ -51,6 +52,7 @@ export default async function DashboardPage() {
               >
                 Download Upload Template
               </a>
+              <UploadTestButton />
               <Link
                 href="/dashboard/create-test"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-700"
