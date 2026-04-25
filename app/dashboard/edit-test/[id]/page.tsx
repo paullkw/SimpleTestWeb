@@ -9,6 +9,7 @@ type QuestionDocument = {
   text: string;
   options: string[];
   correctIndexes: number[];
+  active?: boolean;
   order: number;
 };
 
@@ -57,9 +58,11 @@ export default async function EditTestPage({ params }: { params: Promise<{ id: s
           initialDescription={test.description ?? ""}
           initialQuestions={questionDocs.map((q, i) => ({
             id: i,
+            questionId: q._id.toString(),
             text: q.text,
             options: q.options,
             correctIndexes: q.correctIndexes,
+            active: q.active ?? true,
           }))}
         />
       </div>

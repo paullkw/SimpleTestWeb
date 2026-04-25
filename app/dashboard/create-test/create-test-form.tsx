@@ -8,6 +8,7 @@ type Question = {
   text: string;
   options: string[];
   correctIndexes: number[];
+  active: boolean;
 };
 
 type CreateTestResponse = {
@@ -21,7 +22,7 @@ export default function CreateTestForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([
-    { id: 0, text: "", options: ["", "", "", ""], correctIndexes: [0] },
+    { id: 0, text: "", options: ["", "", "", ""], correctIndexes: [0], active: true },
   ]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,13 @@ export default function CreateTestForm() {
   function addQuestion() {
     setQuestions((prev) => [
       ...prev,
-      { id: nextId.current++, text: "", options: ["", "", "", ""], correctIndexes: [0] },
+      {
+        id: nextId.current++,
+        text: "",
+        options: ["", "", "", ""],
+        correctIndexes: [0],
+        active: true,
+      },
     ]);
   }
 
@@ -75,6 +82,10 @@ export default function CreateTestForm() {
     );
   }
 
+  function toggleQuestionActive(id: number) {
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, active: !q.active } : q)));
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
@@ -108,10 +119,11 @@ export default function CreateTestForm() {
         body: JSON.stringify({
           title,
           description,
-          questions: questions.map(({ text, options, correctIndexes }) => ({
+          questions: questions.map(({ text, options, correctIndexes, active }) => ({
             text,
             options,
             correctIndexes,
+            active,
           })),
         }),
       });
@@ -185,15 +197,26 @@ export default function CreateTestForm() {
                 <span className="mt-0.5 text-sm font-medium text-zinc-600">
                   Q{qIndex + 1}
                 </span>
-                {questions.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeQuestion(q.id)}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    Remove
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-700">
+                    <input
+                      type="checkbox"
+                      checked={q.active}
+                      onChange={() => toggleQuestionActive(q.id)}
+                      className="accent-orange-600"
+                    />
+                    Active
+                  </label>
+                  {questions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeQuestion(q.id)}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
 
               <input

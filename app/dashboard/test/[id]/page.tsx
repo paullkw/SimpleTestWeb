@@ -9,6 +9,7 @@ type QuestionDocument = {
   text: string;
   options: string[];
   correctIndexes: number[];
+  active?: boolean;
   incorrectCount?: number;
   order: number;
 };
@@ -46,7 +47,7 @@ export default async function TestPage({ params }: { params: Promise<{ id: strin
   if (questionIds.length > 0) {
     questions = await db
       .collection<QuestionDocument>("questions")
-      .find({ _id: { $in: questionIds } })
+      .find({ _id: { $in: questionIds }, active: { $ne: false } })
       .toArray();
     // Sort by original order
     questions.sort((a, b) => a.order - b.order);

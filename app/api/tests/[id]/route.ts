@@ -4,9 +4,11 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 
 type QuestionInput = {
+  questionId?: string;
   text?: string;
   options?: string[];
   correctIndexes?: number[];
+  active?: boolean;
 };
 
 type UpdateTestBody = {
@@ -41,24 +43,104 @@ export async function PUT(
     const db = await getDb();
     const testObjectId = new ObjectId(id);
 
-    // Replace all questions for this test
-    await db.collection("questions").deleteMany({ testId: testObjectId });
-
     const questionsInput = body.questions ?? [];
-    let questionIds: ObjectId[] = [];
+    const existingQuestionIds = new Set(
+      (
+        await db
+          .collection<{ _id: ObjectId }>("questions")
+          .find({ testId: testObjectId }, { projection: { _id: 1 } })
+          .toArray()
+      ).map((q) => q._id.toString())
+    );
 
-    if (questionsInput.length > 0) {
-      const questionDocs = questionsInput.map((q, order) => ({
+    const usedExistingQuestionIds = new Set<string>();
+    const questionIds: ObjectId[] = [];
+    const updateOperations: Array<{
+      updateOne: {
+        filter: { _id: ObjectId; testId: ObjectId };
+        update: {
+          $set: {
+            text: string;
+            options: string[];
+            correctIndexes: number[];
+            active: boolean;
+            order: number;
+          };
+        };
+      };
+    }> = [];
+    const insertDocs: Array<{
+      _id: ObjectId;
+      testId: ObjectId;
+      text: string;
+      options: string[];
+      correctIndexes: number[];
+      active: boolean;
+      incorrectCount: number;
+      order: number;
+    }> = [];
+
+    for (let order = 0; order < questionsInput.length; order++) {
+      const q = questionsInput[order];
+      const incomingQuestionId = q.questionId;
+
+      if (incomingQuestionId && ObjectId.isValid(incomingQuestionId)) {
+        const questionObjectId = new ObjectId(incomingQuestionId);
+        const questionIdString = questionObjectId.toString();
+
+        if (
+          existingQuestionIds.has(questionIdString) &&
+          !usedExistingQuestionIds.has(questionIdString)
+        ) {
+          usedExistingQuestionIds.add(questionIdString);
+          questionIds.push(questionObjectId);
+          updateOperations.push({
+            updateOne: {
+              filter: { _id: questionObjectId, testId: testObjectId },
+              update: {
+                $set: {
+                  text: q.text ?? "",
+                  options: q.options ?? [],
+                  correctIndexes: q.correctIndexes ?? [],
+                  active: q.active ?? true,
+                  order,
+                },
+              },
+            },
+          });
+          continue;
+        }
+      }
+
+      const newQuestionId = new ObjectId();
+      questionIds.push(newQuestionId);
+      insertDocs.push({
+        _id: newQuestionId,
         testId: testObjectId,
         text: q.text ?? "",
         options: q.options ?? [],
         correctIndexes: q.correctIndexes ?? [],
+        active: q.active ?? true,
         incorrectCount: 0,
         order,
-      }));
+      });
+    }
 
-      const insertResult = await db.collection("questions").insertMany(questionDocs);
-      questionIds = Object.values(insertResult.insertedIds) as ObjectId[];
+    if (updateOperations.length > 0) {
+      await db.collection("questions").bulkWrite(updateOperations);
+    }
+
+    if (insertDocs.length > 0) {
+      await db.collection("questions").insertMany(insertDocs);
+    }
+
+    if (questionIds.length > 0) {
+      await db.collection("questions").deleteMany({
+        testId: testObjectId,
+        _id: { $nin: questionIds },
+      });
+    } else {
+      await db.collection("questions").deleteMany({ testId: testObjectId });
     }
 
     const result = await db.collection("tests").updateOne(

@@ -7,6 +7,7 @@ type QuestionInput = {
   text?: string;
   options?: string[];
   correctIndexes?: number[];
+  active?: boolean;
 };
 
 type CreateTestBody = {
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
         text: q.text ?? "",
         options: q.options ?? [],
         correctIndexes: q.correctIndexes ?? [],
+        active: q.active ?? true,
         incorrectCount: 0,
         order,
       }));

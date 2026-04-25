@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 
 type Question = {
   id: number;
+  questionId?: string;
   text: string;
   options: string[];
   correctIndexes: number[];
+  active: boolean;
 };
 
 type EditTestResponse = {
@@ -35,7 +37,7 @@ export default function EditTestForm({
   const [questions, setQuestions] = useState<Question[]>(
     initialQuestions.length > 0
       ? initialQuestions
-      : [{ id: 0, text: "", options: ["", "", "", ""], correctIndexes: [0] }]
+      : [{ id: 0, text: "", options: ["", "", "", ""], correctIndexes: [0], active: true }]
   );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,7 +45,13 @@ export default function EditTestForm({
   function addQuestion() {
     setQuestions((prev) => [
       ...prev,
-      { id: nextId.current++, text: "", options: ["", "", "", ""], correctIndexes: [0] },
+      {
+        id: nextId.current++,
+        text: "",
+        options: ["", "", "", ""],
+        correctIndexes: [0],
+        active: true,
+      },
     ]);
   }
 
@@ -89,6 +97,10 @@ export default function EditTestForm({
     );
   }
 
+  function toggleQuestionActive(id: number) {
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, active: !q.active } : q)));
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
@@ -120,10 +132,12 @@ export default function EditTestForm({
         body: JSON.stringify({
           title,
           description,
-          questions: questions.map(({ text, options, correctIndexes }) => ({
+          questions: questions.map(({ questionId, text, options, correctIndexes, active }) => ({
+            questionId,
             text,
             options,
             correctIndexes,
+            active,
           })),
         }),
       });
@@ -195,15 +209,26 @@ export default function EditTestForm({
             >
               <div className="mb-3 flex items-start justify-between gap-2">
                 <span className="mt-0.5 text-sm font-medium text-zinc-600">Q{qIndex + 1}</span>
-                {questions.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeQuestion(q.id)}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    Remove
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-700">
+                    <input
+                      type="checkbox"
+                      checked={q.active}
+                      onChange={() => toggleQuestionActive(q.id)}
+                      className="accent-orange-600"
+                    />
+                    Active
+                  </label>
+                  {questions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeQuestion(q.id)}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
 
               <input
