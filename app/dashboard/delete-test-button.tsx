@@ -25,7 +25,7 @@ export default function DeleteTestButton({ testId }: Props) {
 
   if (confirming) {
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-end gap-1.5">
         <button
           onClick={handleDelete}
           disabled={loading}
