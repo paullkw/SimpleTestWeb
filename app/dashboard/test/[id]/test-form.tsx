@@ -41,13 +41,23 @@ export default function TestForm({ testId, title, questions }: Props) {
     });
   }
 
+  async function recordCorrect(questionIndex: number) {
+    await fetch(`/api/tests/${testId}/correct`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ questionId: shuffledQuestions[questionIndex].questionId }),
+    });
+  }
+
   function checkQuestion(questionIndex: number) {
     const selected = [...answers[questionIndex]].sort((a, b) => a - b);
     const correct = [...shuffledQuestions[questionIndex].correctIndexes].sort((a, b) => a - b);
     const isMatch =
       selected.length === correct.length &&
       selected.every((v, i) => v === correct[i]);
-    if (!isMatch) {
+    if (isMatch) {
+      recordCorrect(questionIndex);
+    } else {
       recordIncorrect(questionIndex);
     }
     setCheckedQuestions((prev) => new Set(prev).add(questionIndex));
@@ -73,7 +83,9 @@ export default function TestForm({ testId, title, questions }: Props) {
 
   function selectAnswer(questionIndex: number, optionIndex: number) {
     const isCorrect = shuffledQuestions[questionIndex].correctIndexes.includes(optionIndex);
-    if (!isCorrect) {
+    if (isCorrect) {
+      recordCorrect(questionIndex);
+    } else {
       recordIncorrect(questionIndex);
     }
     setAnswers((prev) =>
@@ -89,12 +101,14 @@ export default function TestForm({ testId, title, questions }: Props) {
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           This test has no questions yet.
         </p>
-        <Link
-          href="/dashboard"
-          className="inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
-        >
-          Back to Dashboard
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/dashboard"
+            className="inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
       </section>
     );
   }
@@ -176,7 +190,6 @@ export default function TestForm({ testId, title, questions }: Props) {
       </ul>
 
       <div className="flex flex-wrap gap-3">
-
         <Link
           href="/dashboard"
           className="rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"

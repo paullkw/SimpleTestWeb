@@ -77,6 +77,7 @@ export async function PUT(
       correctIndexes: number[];
       active: boolean;
       incorrectCount: number;
+      consecutiveCorrectCount: number;
       order: number;
     }> = [];
 
@@ -94,17 +95,30 @@ export async function PUT(
         ) {
           usedExistingQuestionIds.add(questionIdString);
           questionIds.push(questionObjectId);
+          const setPayload: {
+            text: string;
+            options: string[];
+            correctIndexes: number[];
+            active: boolean;
+            order: number;
+            consecutiveCorrectCount?: number;
+          } = {
+            text: q.text ?? "",
+            options: q.options ?? [],
+            correctIndexes: q.correctIndexes ?? [],
+            active: q.active ?? true,
+            order,
+          };
+
+          if ((q.active ?? true) === false) {
+            setPayload.consecutiveCorrectCount = 0;
+          }
+
           updateOperations.push({
             updateOne: {
               filter: { _id: questionObjectId, testId: testObjectId },
               update: {
-                $set: {
-                  text: q.text ?? "",
-                  options: q.options ?? [],
-                  correctIndexes: q.correctIndexes ?? [],
-                  active: q.active ?? true,
-                  order,
-                },
+                $set: setPayload,
               },
             },
           });
@@ -122,6 +136,7 @@ export async function PUT(
         correctIndexes: q.correctIndexes ?? [],
         active: q.active ?? true,
         incorrectCount: 0,
+        consecutiveCorrectCount: 0,
         order,
       });
     }

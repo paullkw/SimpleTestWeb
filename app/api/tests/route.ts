@@ -45,6 +45,7 @@ export async function POST(request: Request) {
         correctIndexes: q.correctIndexes ?? [],
         active: q.active ?? true,
         incorrectCount: 0,
+        consecutiveCorrectCount: 0,
         order,
       }));
 
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
       _id: testId,
       title,
       description: body.description?.trim() ?? "",
+      consecutiveCorrectToInactivateQuestion: 3,
       questionIds,
       createdBy: session.userId,
       createdAt: new Date(),

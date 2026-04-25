@@ -33,7 +33,10 @@ export async function POST(
     const db = await getDb();
     const result = await db.collection("questions").updateOne(
       { _id: new ObjectId(questionId), testId: new ObjectId(id) },
-      { $inc: { incorrectCount: 1 } }
+      {
+        $inc: { incorrectCount: 1 },
+        $set: { consecutiveCorrectCount: 0 },
+      }
     );
 
     if (result.matchedCount === 0) {
