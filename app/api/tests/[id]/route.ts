@@ -7,6 +7,7 @@ type QuestionInput = {
   text?: string;
   options?: string[];
   correctIndex?: number;
+  correctIndexes?: number[];
 };
 
 type UpdateTestBody = {

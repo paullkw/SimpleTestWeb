@@ -7,7 +7,8 @@ import EditTestForm from "./edit-test-form";
 type Question = {
   text: string;
   options: string[];
-  correctIndex: number;
+  correctIndex?: number;
+  correctIndexes?: number[];
 };
 
 type TestDocument = {
@@ -47,7 +48,12 @@ export default async function EditTestPage({ params }: { params: Promise<{ id: s
               id: i,
               text: q.text,
               options: q.options,
-              correctIndex: q.correctIndex,
+              correctIndexes:
+                q.correctIndexes && q.correctIndexes.length > 0
+                  ? q.correctIndexes
+                  : typeof q.correctIndex === "number"
+                    ? [q.correctIndex]
+                    : [0],
             })) ?? []
           }
         />

@@ -71,7 +71,13 @@ export default async function DashboardPage() {
                       Questions: {test.questionsCount ?? "N/A"}
                     </span>
                   </div>
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-4 flex items-center justify-end gap-2">
+                    <Link
+                      href={`/dashboard/test/${test._id.toString()}`}
+                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700"
+                    >
+                      Test
+                    </Link>
                     <Link
                       href={`/dashboard/edit-test/${test._id.toString()}`}
                       className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100"

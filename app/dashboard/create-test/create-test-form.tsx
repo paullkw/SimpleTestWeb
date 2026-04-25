@@ -7,7 +7,7 @@ type Question = {
   id: number;
   text: string;
   options: string[];
-  correctIndex: number;
+  correctIndexes: number[];
 };
 
 type CreateTestResponse = {
@@ -21,7 +21,7 @@ export default function CreateTestForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([
-    { id: 0, text: "", options: ["", "", "", ""], correctIndex: 0 },
+    { id: 0, text: "", options: ["", "", "", ""], correctIndexes: [0] },
   ]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ export default function CreateTestForm() {
   function addQuestion() {
     setQuestions((prev) => [
       ...prev,
-      { id: nextId.current++, text: "", options: ["", "", "", ""], correctIndex: 0 },
+      { id: nextId.current++, text: "", options: ["", "", "", ""], correctIndexes: [0] },
     ]);
   }
 
@@ -51,8 +51,28 @@ export default function CreateTestForm() {
     );
   }
 
-  function updateCorrectIndex(id: number, correctIndex: number) {
-    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, correctIndex } : q)));
+  function toggleCorrectIndex(id: number, optionIndex: number) {
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.id !== id) {
+          return q;
+        }
+
+        const hasOption = q.correctIndexes.includes(optionIndex);
+
+        if (hasOption) {
+          return {
+            ...q,
+            correctIndexes: q.correctIndexes.filter((index) => index !== optionIndex),
+          };
+        }
+
+        return {
+          ...q,
+          correctIndexes: [...q.correctIndexes, optionIndex].sort((a, b) => a - b),
+        };
+      })
+    );
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -73,6 +93,10 @@ export default function CreateTestForm() {
         setError("All answer options must be filled in.");
         return;
       }
+      if (q.correctIndexes.length === 0) {
+        setError("Each question must have at least one correct answer.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -85,10 +109,10 @@ export default function CreateTestForm() {
           title,
           description,
           questionsCount: questions.length,
-          questions: questions.map(({ text, options, correctIndex }) => ({
+          questions: questions.map(({ text, options, correctIndexes }) => ({
             text,
             options,
-            correctIndex,
+            correctIndexes,
           })),
         }),
       });
@@ -183,16 +207,15 @@ export default function CreateTestForm() {
               />
 
               <p className="mb-2 text-xs font-medium text-zinc-600">
-                Options — select the correct answer
+                Options — select one or more correct answers
               </p>
               <ul className="space-y-2">
                 {q.options.map((opt, oIndex) => (
                   <li key={oIndex} className="flex items-center gap-2">
                     <input
-                      type="radio"
-                      name={`correct-${q.id}`}
-                      checked={q.correctIndex === oIndex}
-                      onChange={() => updateCorrectIndex(q.id, oIndex)}
+                      type="checkbox"
+                      checked={q.correctIndexes.includes(oIndex)}
+                      onChange={() => toggleCorrectIndex(q.id, oIndex)}
                       className="accent-orange-600"
                     />
                     <input
