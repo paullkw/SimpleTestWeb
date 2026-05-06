@@ -119,7 +119,7 @@ export default function TestForm({ testId, title, questions }: Props) {
         {shuffledQuestions.map((question, questionIndex) => (
           <li key={`${title}-${questionIndex}`} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 shadow-sm">
             <div className="mb-3 flex items-start justify-between gap-2">
-              <p className="text-sm font-semibold text-zinc-900">
+              <p className="whitespace-pre-line break-words text-sm font-semibold text-zinc-900">
                 {questionIndex + 1}. {question.text}
               </p>
             </div>
@@ -167,7 +167,7 @@ export default function TestForm({ testId, title, questions }: Props) {
                           className="accent-emerald-600"
                         />
                       )}
-                      <span>{option}</span>
+                      <span className="whitespace-pre-line break-words">{option}</span>
                       {showCorrect && <span className="ml-auto text-xs font-medium text-emerald-700">Correct</span>}
                       {showWrong && <span className="ml-auto text-xs font-medium text-red-700">Wrong</span>}
                     </label>

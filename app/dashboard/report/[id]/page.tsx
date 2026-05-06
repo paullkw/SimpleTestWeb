@@ -73,7 +73,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                   className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-zinc-900">
+                    <p className="whitespace-pre-line break-words text-sm font-semibold text-zinc-900">
                       #{rank + 1} — {question.text}
                     </p>
                     <span

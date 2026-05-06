@@ -38,9 +38,9 @@ function parseQuestionsFromWorksheet(sheet: XLSX.WorkSheet): ParsedQuestion[] {
 
   for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
     const row = rows[rowIndex] ?? [];
-    const questionText = String(row[0] ?? "").trim();
+    const questionText = String(row[0] ?? "").replace(/\r\n?/g, "\n");
 
-    if (!questionText) {
+    if (!questionText.trim()) {
       continue;
     }
 
@@ -48,10 +48,10 @@ function parseQuestionsFromWorksheet(sheet: XLSX.WorkSheet): ParsedQuestion[] {
     const correctIndexes: number[] = [];
 
     for (let col = 1; col < row.length; col += 2) {
-      const optionText = String(row[col] ?? "").trim();
+      const optionText = String(row[col] ?? "").replace(/\r\n?/g, "\n");
       const answerFlag = row[col + 1];
 
-      if (!optionText) {
+      if (!optionText.trim()) {
         continue;
       }
 
