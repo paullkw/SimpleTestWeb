@@ -73,9 +73,14 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                   className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="whitespace-pre-line break-words text-sm font-semibold text-zinc-900">
-                      #{rank + 1} — {question.text}
-                    </p>
+                    <div className="flex min-w-0 items-start gap-2">
+                      <div className="shrink-0 text-sm font-semibold text-zinc-900">
+                        #{rank + 1}.
+                      </div>
+                      <div className="whitespace-pre-line break-words text-sm font-semibold text-zinc-900">
+                        {question.text}
+                      </div>
+                    </div>
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
                         count > 0
