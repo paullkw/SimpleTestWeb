@@ -231,12 +231,12 @@ export default function EditTestForm({
                 </div>
               </div>
 
-              <input
+              <textarea
                 required
-                type="text"
                 value={q.text}
                 onChange={(e) => updateQuestionText(q.id, e.target.value)}
                 placeholder="Question text"
+                rows={3}
                 className="mb-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-orange-300 transition focus:border-orange-400 focus:ring-2"
               />
 
