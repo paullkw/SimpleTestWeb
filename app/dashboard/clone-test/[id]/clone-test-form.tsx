@@ -24,6 +24,33 @@ type Props = {
   initialQuestions: Question[];
 };
 
+function sanitizeRichHtml(html: string): string {
+  if (typeof window === "undefined") {
+    return html;
+  }
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  doc.querySelectorAll("script, iframe, object, embed").forEach((node) => node.remove());
+
+  doc.querySelectorAll("*").forEach((element) => {
+    Array.from(element.attributes).forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const value = attr.value.toLowerCase();
+
+      if (name.startsWith("on")) {
+        element.removeAttribute(attr.name);
+      }
+
+      if ((name === "href" || name === "src") && value.startsWith("javascript:")) {
+        element.removeAttribute(attr.name);
+      }
+    });
+  });
+
+  return doc.body.innerHTML;
+}
+
 export default function CloneTestForm({
   initialTitle,
   initialDescription,
@@ -145,10 +172,12 @@ export default function CloneTestForm({
                     className="mt-1 accent-violet-600"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-zinc-900">
-                        #{index + 1} {question.text}
-                      </span>
+                    <div className="flex flex-wrap items-start gap-2">
+                      <span className="text-sm font-semibold text-zinc-900">#{index + 1}</span>
+                      <span
+                        className="min-w-0 flex-1 break-words text-sm font-semibold text-zinc-900 [&_img]:my-2 [&_img]:max-w-full [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:inline [&_ul]:list-disc [&_ul]:pl-5"
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(question.text) }}
+                      />
                       <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-800">
                         Incorrect: {question.incorrectCount}
                       </span>
@@ -157,10 +186,14 @@ export default function CloneTestForm({
                       {question.options.map((option, optionIndex) => {
                         const isCorrect = question.correctIndexes.includes(optionIndex);
                         return (
-                          <li key={`${question.id}-${optionIndex}`}>
-                            <span className={isCorrect ? "font-medium text-emerald-800" : undefined}>
-                              {option}
-                            </span>
+                          <li
+                            key={`${question.id}-${optionIndex}`}
+                            className={isCorrect ? "font-medium text-emerald-800" : undefined}
+                          >
+                            <span
+                              className="break-words [&_img]:my-1 [&_img]:max-w-full [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                              dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(option) }}
+                            />
                             {isCorrect ? " (correct)" : ""}
                           </li>
                         );
