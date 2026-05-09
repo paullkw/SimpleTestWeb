@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import RichTextEditor from "@/app/components/RichTextEditor";
 
 type Question = {
   id: number;
@@ -101,6 +102,39 @@ export default function EditTestForm({
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, active: !q.active } : q)));
   }
 
+  function addOption(questionId: number) {
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id === questionId
+          ? { ...q, options: [...q.options, ""] }
+          : q
+      )
+    );
+  }
+
+  function removeOption(questionId: number, optionIndex: number) {
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.id !== questionId) return q;
+        
+        // Don't remove if it would go below 2 options
+        if (q.options.length <= 2) return q;
+        
+        // Remove the option and adjust correctIndexes if needed
+        const newOptions = q.options.filter((_, i) => i !== optionIndex);
+        const newCorrectIndexes = q.correctIndexes
+          .filter((i) => i !== optionIndex)
+          .map((i) => (i > optionIndex ? i - 1 : i));
+        
+        return {
+          ...q,
+          options: newOptions,
+          correctIndexes: newCorrectIndexes.length > 0 ? newCorrectIndexes : [0],
+        };
+      })
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
@@ -112,6 +146,10 @@ export default function EditTestForm({
     for (const q of questions) {
       if (!q.text.trim()) {
         setError("All question texts are required.");
+        return;
+      }
+      if (q.options.length < 2) {
+        setError("Each question must have at least 2 answer options.");
         return;
       }
       if (q.options.some((o) => !o.trim())) {
@@ -231,18 +269,26 @@ export default function EditTestForm({
                 </div>
               </div>
 
-              <textarea
-                required
-                value={q.text}
-                onChange={(e) => updateQuestionText(q.id, e.target.value)}
-                placeholder="Question text"
-                rows={3}
-                className="mb-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-orange-300 transition focus:border-orange-400 focus:ring-2"
-              />
+              <div className="mb-3">
+                <RichTextEditor
+                  value={q.text}
+                  onChange={(content) => updateQuestionText(q.id, content)}
+                  placeholder="Question text"
+                />
+              </div>
 
-              <p className="mb-2 text-xs font-medium text-zinc-600">
-                Options — select one or more correct answers
-              </p>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs font-medium text-zinc-600">
+                  Options — select one or more correct answers
+                </p>
+                <button
+                  type="button"
+                  onClick={() => addOption(q.id)}
+                  className="rounded border border-orange-300 px-2 py-1 text-xs font-medium text-orange-900 transition hover:bg-orange-50"
+                >
+                  + Add Option
+                </button>
+              </div>
               <ul className="space-y-2">
                 {q.options.map((opt, oIndex) => (
                   <li key={oIndex} className="flex items-center gap-2">
@@ -252,14 +298,22 @@ export default function EditTestForm({
                       onChange={() => toggleCorrectIndex(q.id, oIndex)}
                       className="accent-orange-600"
                     />
-                    <input
-                      required
-                      type="text"
-                      value={opt}
-                      onChange={(e) => updateOption(q.id, oIndex, e.target.value)}
-                      placeholder={`Option ${oIndex + 1}`}
-                      className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-orange-300 transition focus:border-orange-400 focus:ring-2"
-                    />
+                      <div className="flex-1">
+                        <RichTextEditor
+                          value={opt}
+                          onChange={(content) => updateOption(q.id, oIndex, content)}
+                          placeholder={`Option ${oIndex + 1}`}
+                          className="!min-h-[60px]"
+                        />
+                      </div>
+                    <button
+                      type="button"
+                      onClick={() => removeOption(q.id, oIndex)}
+                      disabled={q.options.length <= 2}
+                      className="text-xs text-red-500 hover:underline disabled:cursor-not-allowed disabled:text-zinc-300"
+                    >
+                      Remove
+                    </button>
                   </li>
                 ))}
               </ul>

@@ -16,6 +16,33 @@ type Props = {
   questions: Question[];
 };
 
+function sanitizeRichHtml(html: string): string {
+  if (typeof window === "undefined") {
+    return html;
+  }
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  doc.querySelectorAll("script, iframe, object, embed").forEach((node) => node.remove());
+
+  doc.querySelectorAll("*").forEach((element) => {
+    Array.from(element.attributes).forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const value = attr.value.toLowerCase();
+
+      if (name.startsWith("on")) {
+        element.removeAttribute(attr.name);
+      }
+
+      if ((name === "href" || name === "src") && value.startsWith("javascript:")) {
+        element.removeAttribute(attr.name);
+      }
+    });
+  });
+
+  return doc.body.innerHTML;
+}
+
 function shuffleArray<T>(array: T[]): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -122,9 +149,10 @@ export default function TestForm({ testId, title, questions }: Props) {
               <div className="shrink-0 text-sm font-semibold text-zinc-900">
                 {questionIndex + 1}.
               </div>
-              <div className="whitespace-pre-line break-words text-sm font-semibold text-zinc-900">
-                {question.text}
-              </div>
+              <div
+                className="break-words text-sm font-semibold text-zinc-900 [&_img]:my-2 [&_img]:max-w-full [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(question.text) }}
+              />
             </div>
 
             <ul className="space-y-2">
@@ -170,7 +198,10 @@ export default function TestForm({ testId, title, questions }: Props) {
                           className="accent-emerald-600"
                         />
                       )}
-                      <span className="whitespace-pre-line break-words">{option}</span>
+                      <span
+                        className="flex-1 break-words [&_img]:my-1 [&_img]:max-w-full [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(option) }}
+                      />
                       {showCorrect && <span className="ml-auto text-xs font-medium text-emerald-700">Correct</span>}
                       {showWrong && <span className="ml-auto text-xs font-medium text-red-700">Wrong</span>}
                     </label>
