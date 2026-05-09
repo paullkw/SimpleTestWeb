@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import Link from "next/link";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { sanitizeRichHtml } from "@/lib/sanitize-rich-html";
 
 type QuestionDocument = {
   _id: ObjectId;
@@ -77,9 +78,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                       <div className="shrink-0 text-sm font-semibold text-zinc-900">
                         #{rank + 1}.
                       </div>
-                      <div className="whitespace-pre-line break-words text-sm font-semibold text-zinc-900">
-                        {question.text}
-                      </div>
+                      <div
+                        className="break-words text-sm font-semibold text-zinc-900 [&_img]:my-2 [&_img]:max-w-full [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:inline [&_ul]:list-disc [&_ul]:pl-5"
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(question.text) }}
+                      />
                     </div>
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
